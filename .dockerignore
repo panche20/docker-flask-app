@@ -1,0 +1,13 @@
+.env
+.git
+.gitignore
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/tests/
+*.tar
+*.deb
+docker-compose*.yml
+nginx/
+.dockerignore
+README.md
