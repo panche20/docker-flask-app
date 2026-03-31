@@ -72,8 +72,8 @@ APP_PORT=8000
 ### 1️⃣ Clone the repository
 
 ```bash
-git clone https://github.com/your-username/url-shortener.git
-cd url-shortener
+git clone https://github.com/panche20/docker-flask-app.git
+cd docker-flask-app
 ```
 
 ### 2️⃣ Start services
@@ -84,8 +84,7 @@ docker-compose up --build
 
 ### 3️⃣ Access application
 
-* App: http://localhost
-* Docs: http://localhost/docs
+* App: http://localhost/80
 * Health: http://localhost/health
 
 ---
@@ -95,58 +94,95 @@ docker-compose up --build
 ### ➤ Create Short URL
 
 ```bash
-POST /shorten
+# Health check
+curl http://localhost/health
+# {"status":"healthy","redis":"connected"}
 ```
 
-Request:
-
-```json
-{
-  "url": "https://example.com"
-}
-```
-
-Response:
-
-```json
-{
-  "short_code": "abc123",
-  "short_url": "/r/abc123"
-}
-```
-
----
-
-### ➤ Redirect
+Shorten a URL:
 
 ```
-GET /r/{code}
+curl -X POST http://localhost/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.google.com"}'
+# {"short_code":"abc123","short_url":"/r/abc123"}
+```
+
+Use your actual short code from above:
+
+```
+curl -L http://localhost/r/abc123
+# Redirects to google.com
 ```
 
 ---
 
-### ➤ Get Stats
+### ➤ Check click stats
 
 ```
-GET /stats/{code}
-```
-
-Response:
-
-```json
-{
-  "short_code": "abc123",
-  "url": "https://example.com",
-  "clicks": 5
-}
+curl http://localhost/stats/abc123
+# {"short_code":"abc123","url":"https://www.google.com","clicks":"1"}
 ```
 
 ---
 
-### ➤ Health Check
+### ➤ Shorten a few more
 
 ```
-GET /health
+curl -X POST http://localhost/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://github.com"}'
+```
+
+Hit it a few times and watch clicks increment:
+
+```
+curl http://localhost/stats/abc123
+```
+
+---
+
+### ➤ Prove Persistence Survives Restarts
+
+```
+Shorten something, note the code
+curl -X POST http://localhost/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://github.com"}'
+```
+
+Destroy and recreate everything (keep volumes)
+```
+docker compose down
+docker compose up -d
+```
+
+Your data is still there
+```
+curl http://localhost/stats/<your_code>
+```
+
+Inspect What You Built
+```
+Layer history — see your multi-stage work
+docker history url-shortener-app --no-trunc
+```
+
+Verify no secrets in the image
+```
+docker inspect url-shortener-app-1 \
+  --format '{{range .Config.Env}}{{.}}{{"\n"}}{{end}}'
+```
+
+Check non-root user is running the process
+```
+docker compose exec app whoami
+# appuser ← not root, good
+```
+
+Check what's actually in /app — should be clean
+```
+docker compose exec app find /app -type f
 ```
 
 ---
@@ -222,7 +258,7 @@ This project demonstrates real-world DevOps skills:
 
 ## 👨‍💻 Author
 
-Chetan – Aspiring DevOps Engineer 🚀
+Chetan – DevOps Engineer 🚀
 
 ---
 
