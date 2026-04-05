@@ -8,10 +8,20 @@ import time
 
 app = FastAPI(title="URL Shortener")
 
+def read_secret(name: str, fallback_env: str = None) -> str:
+    """Read secret from file first, fall back to env var."""
+    secret_path = f"/run/secrets/{name}"
+    if os.path.exists(secret_path):
+        with open(secret_path) as f:
+            return f.read().strip()
+    if fallback_env:
+        return os.getenv(fallback_env, "")
+    return ""
+
 r = redis.Redis(
     host=os.getenv("REDIS_HOST", "localhost"),
     port=int(os.getenv("REDIS_PORT", 6379)),
-    password=os.getenv("REDIS_PASSWORD", None),
+    password=read_secret("redis_password", "REDIS_PASSWORD") or None,
     decode_responses=True
 )
 
@@ -27,8 +37,8 @@ def health():
     try:
         r.ping()
         return {"status": "healthy", "redis": "connected"}
-    except Exception:
-        raise HTTPException(status_code=503, detail="Redis unavailable")
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Redis unavailable: {e}")
 
 @app.post("/shorten")
 def shorten(req: URLRequest):
