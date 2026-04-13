@@ -72,8 +72,8 @@ APP_PORT=8000
 ### 1️⃣ Clone the repository
 
 ```bash
-git clone https://github.com/panche20/docker-flask-app.git
-cd docker-flask-app
+git clone https://github.com/panche20/url-shortener-app.git
+cd url-shortener-app
 ```
 
 ### 2️⃣ Start services
