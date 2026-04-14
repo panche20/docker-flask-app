@@ -66,6 +66,3 @@ logs/
 *.swo
 secrets/
 secrets/*
-.env
-secrets/
-secrets/
