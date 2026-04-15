@@ -5,6 +5,9 @@ import redis
 import os
 import hashlib
 import time
+import logging
+import json
+import time
 
 app = FastAPI(title="URL Shortener")
 
@@ -64,3 +67,30 @@ def stats(code: str):
 @app.get("/")
 def root():
     return {"message": "URL Shortener running", "docs": "/docs"}
+
+class JSONFormatter(logging.Formatter):
+    def format(self, record):
+        return json.dumps({
+            "time": self.formatTime(record),
+            "level": record.levelname,
+            "message": record.getMessage(),
+            "service": "url-shortener"
+        })
+
+handler = logging.StreamHandler()
+handler.setFormatter(JSONFormatter())
+logger = logging.getLogger("app")
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+
+# Use it in endpoints
+@app.post("/shorten")
+def shorten(req: URLRequest):
+    code = make_short_code(req.url)
+    r.hset(f"url:{code}", mapping={"url": req.url, "clicks": 0})
+    logger.info(json.dumps({
+        "event": "url_shortened",
+        "code": code,
+        "url": req.url
+    }))
+    return {"short_code": code, "short_url": f"/r/{code}"}
