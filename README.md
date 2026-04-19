@@ -65,16 +65,6 @@ REDIS_PASSWORD=strongpassword123
 APP_PORT=8000
 ```
 
-## For Kubernetes project - Create secrets
-
-```
-export SECRET_KEY="my-super-secret-app-key-$(openssl rand -hex 16)"
-kubectl create secret generic app-secrets \
-  --from-literal=redis_password=strongpassword123 \
-  --from-literal=secret_key="$SECRET_KEY" \
-  -n url-shortener
-```
-
 ---
 
 ## ▶️ How to Run
@@ -195,6 +185,56 @@ Check what's actually in /app — should be clean
 docker compose exec app find /app -type f
 ```
 
+## For Kubernetes project - Create namespace, secrets, deployment & services
+
+```
+kubectl create ns url-shortener
+kubectl config set-context --current --namespace=url-shortener
+kubectl config view --minify | grep -i namespace
+```
+
+```
+export SECRET_KEY="my-super-secret-app-key-$(openssl rand -hex 16)"
+kubectl create secret generic app-secrets \
+  --from-literal=redis_password=strongpassword123 \
+  --from-literal=secret_key="$SECRET_KEY" \
+  -n url-shortener
+```
+
+Then, apply url-shortener-deployment.yaml, redis-deployment.yaml, app-nodeport.yaml, app-service.yaml.
+To test the app, follow below steps:
+
+```
+minikube ip
+curl http://$(minikube ip):30080/health
+```
+
+To test the URL shortener functionality,
+```
+# See everything running
+kubectl get all -n url-shortener
+```
+Port-forward to test locally
+```
+kubectl port-forward svc/url-shortener 8080:80 -n url-shortener &
+```
+Test the full stack
+```
+curl http://localhost:8080/health
+```
+
+```
+curl -X POST http://localhost:8080/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://github.com"}'
+```
+Grab the code from response and test redirect
+```
+CODE=<your-code>
+curl -L http://localhost:8080/r/$CODE
+
+curl http://localhost:8080/stats/$CODE
+```
 ---
 
 ## 🐳 Docker Highlights
