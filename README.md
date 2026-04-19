@@ -65,6 +65,16 @@ REDIS_PASSWORD=strongpassword123
 APP_PORT=8000
 ```
 
+## For Kubernetes project - Create secrets
+
+```
+export SECRET_KEY="my-super-secret-app-key-$(openssl rand -hex 16)"
+kubectl create secret generic app-secrets \
+  --from-literal=redis_password=strongpassword123 \
+  --from-literal=secret_key="$SECRET_KEY" \
+  -n url-shortener
+```
+
 ---
 
 ## ▶️ How to Run
