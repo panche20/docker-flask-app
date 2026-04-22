@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: retained-data
+  namespace: url-shortener
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: fast-ssd   # uses Retain policy
+  resources:
+    requests:
+      storage: 512Mi

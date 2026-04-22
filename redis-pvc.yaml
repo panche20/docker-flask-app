@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data
+  namespace: url-shortener
+spec:
+  accessModes:
+  - ReadWriteOnce        # one node reads+writes
+  storageClassName: standard   # use minikube's default StorageClass
+  resources:
+    requests:
+      storage: 1Gi       # claim 1GB of storage

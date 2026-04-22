@@ -1,13 +1,15 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: redis
   namespace: url-shortener
 spec:
+  serviceName: redis-headless
   replicas: 1
   selector:
     matchLabels:
       app: redis
+
   template:
     metadata:
       labels:
@@ -32,7 +34,7 @@ spec:
         - redis-server --requirepass "$REDIS_PASSWORD"
 
         volumeMounts:
-        - name: redis-storage
+        - name: redis-data
           mountPath: /data
 
         resources:
@@ -63,7 +65,12 @@ spec:
           periodSeconds: 5
           failureThreshold: 3
 
-      volumes:
-      - name: redis-storage
-        persistentVolumeClaim:
-          claimName: redis-data
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: standard
+      resources:
+        requests:
+          storage: 1Gi
